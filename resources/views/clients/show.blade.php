@@ -15,6 +15,9 @@
     @if (session('status'))
         <p class="status">{{ session('status') }}</p>
     @endif
+    @if (session('error'))
+        <p class="error">{{ session('error') }}</p>
+    @endif
 
     @if ($errors->any())
         <div class="error">
@@ -26,35 +29,60 @@
         </div>
     @endif
 
-    <div class="tabs">
-        <button
-            type="button"
+    <div class="tabs-shell">
+        <div class="tabs">
+            <a
+            href="#"
             class="tab-button active"
             data-tab-button
             data-tab-group="client-show"
             data-tab-target="#tab-general"
         >
             General
-        </button>
-        <button
-            type="button"
+            </a>
+            <a
+            href="#"
             class="tab-button"
             data-tab-button
             data-tab-group="client-show"
             data-tab-target="#tab-contacts"
         >
             Contact(s)
-        </button>
+            </a>
+        </div>
     </div>
 
     <section id="tab-general" class="glass card tab-panel active" data-tab-panel data-tab-group="client-show">
         <div class="kv">
-            <p><strong>Name:</strong> {{ $client->name }}</p>
-            <p><strong>Client code:</strong> {{ $client->client_code }}</p>
+            <div class="field">
+                <label for="client-name-readonly">Name</label>
+                <input id="client-name-readonly" type="text" value="{{ $client->name }}" readonly>
+            </div>
+            <div class="field">
+                <label for="client-code-readonly">Client code</label>
+                <input id="client-code-readonly" type="text" value="{{ $client->client_code }}" readonly>
+            </div>
         </div>
     </section>
 
     <section id="tab-contacts" class="glass card tab-panel" data-tab-panel data-tab-group="client-show">
+        @if ($availableContacts->isNotEmpty())
+            <form method="post" action="{{ route('clients.contacts.attach', $client) }}" class="link-row">
+                @csrf
+                <div class="field">
+                    <label for="contact_id">Link contact</label>
+                    <select id="contact_id" name="contact_id" required>
+                        @foreach ($availableContacts as $contact)
+                            <option value="{{ $contact->id }}" @selected($selectedContactId === $contact->id)>
+                                {{ $contact->surname }} {{ $contact->name }} - {{ $contact->email }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-secondary">Link</button>
+            </form>
+        @endif
+
         <div class="table-wrap">
             @if ($client->contacts->isEmpty())
                 <p class="muted">No contacts found.</p>
@@ -64,6 +92,7 @@
                         <tr>
                             <th>Contact full name</th>
                             <th>Email</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -71,6 +100,17 @@
                             <tr>
                                 <td>{{ $contact->surname }} {{ $contact->name }}</td>
                                 <td>{{ $contact->email }}</td>
+                                <td>
+                                    <form
+                                        method="post"
+                                        action="{{ route('clients.contacts.unlink', ['client' => $client, 'contact' => $contact]) }}"
+                                        class="inline-form"
+                                    >
+                                        @csrf
+                                        @method('delete')
+                                        <button type="submit" class="btn btn-danger btn-xs">Unlink</button>
+                                    </form>
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>

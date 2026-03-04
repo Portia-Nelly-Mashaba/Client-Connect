@@ -3,31 +3,31 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreContactRequest;
+use App\Models\Client;
 use App\Models\Contact;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
+use Illuminate\Support\Collection;
 
 class ContactController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(): View
     {
         $contacts = Contact::query()
             ->ordered()
             ->withCount('clients')
             ->get();
 
-        return response()->json([
-            'data' => $contacts,
-        ]);
+        return view('contacts.index', compact('contacts'));
     }
 
-    public function create(): JsonResponse
+    public function create(): View
     {
-        return response()->json([
-            'message' => 'Submit name, surname, and email to create a contact.',
-        ]);
+        return $this->index();
     }
 
-    public function store(StoreContactRequest $request): JsonResponse
+    public function store(StoreContactRequest $request): RedirectResponse
     {
         $contact = Contact::query()->create([
             'name' => $request->string('name')->toString(),
@@ -35,21 +35,38 @@ class ContactController extends Controller
             'email' => strtolower($request->string('email')->toString()),
         ]);
 
-        return response()->json([
-            'message' => 'Contact created successfully.',
-            'data' => $contact,
-        ], 201);
+        return redirect()
+            ->route('contacts.show', $contact)
+            ->with('status', 'Contact created successfully.');
     }
 
-    public function show(Contact $contact): JsonResponse
+    public function show(Request $request, Contact $contact): View
     {
         $contact->load([
             'clients' => fn ($query) => $query->ordered(),
         ]);
         $contact->loadCount('clients');
+        $linkedClientIds = $contact->clients->pluck('id');
+        $availableClients = Client::query()
+            ->ordered()
+            ->whereNotIn('id', $linkedClientIds)
+            ->get();
 
-        return response()->json([
-            'data' => $contact,
+        return view('contacts.show', [
+            'contact' => $contact,
+            'availableClients' => $availableClients,
+            'selectedClientId' => $this->selectedId($request, 'client_id', $availableClients),
         ]);
+    }
+
+    private function selectedId(Request $request, string $field, Collection $availableItems): ?int
+    {
+        $requestedId = $request->integer($field);
+
+        if ($requestedId > 0 && $availableItems->contains('id', $requestedId)) {
+            return $requestedId;
+        }
+
+        return $availableItems->first()?->id;
     }
 }

@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreClientRequest;
 use App\Models\Client;
+use App\Models\Contact;
 use App\Services\ClientCodeGeneratorService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Support\Collection;
 
 class ClientController extends Controller
 {
@@ -53,10 +55,28 @@ class ClientController extends Controller
         $client->load([
             'contacts' => fn ($query) => $query->ordered(),
         ]);
+        $linkedContactIds = $client->contacts->pluck('id');
+        $availableContacts = Contact::query()
+            ->ordered()
+            ->whereNotIn('id', $linkedContactIds)
+            ->get();
 
         return view('clients.show', [
             'client' => $client,
+            'availableContacts' => $availableContacts,
+            'selectedContactId' => $this->selectedId($request, 'contact_id', $availableContacts),
             'openGeneralModal' => $request->boolean('edit'),
         ]);
+    }
+
+    private function selectedId(Request $request, string $field, Collection $availableItems): ?int
+    {
+        $requestedId = $request->integer($field);
+
+        if ($requestedId > 0 && $availableItems->contains('id', $requestedId)) {
+            return $requestedId;
+        }
+
+        return $availableItems->first()?->id;
     }
 }

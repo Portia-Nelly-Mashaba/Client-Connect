@@ -6,7 +6,10 @@
             <h1 class="title">Clients</h1>
             <p class="subtitle">ClientConnect dashboard</p>
         </div>
-        <button type="button" class="btn btn-primary" data-open-modal="#create-client-modal">+ New Client</button>
+        <div style="display: flex; gap: 10px;">
+            <a href="{{ route('contacts.index') }}" class="btn btn-secondary">Contacts</a>
+            <button type="button" class="btn btn-primary" data-open-modal="#create-client-modal">+ New Client</button>
+        </div>
     </div>
 
     @if (session('status'))
@@ -33,7 +36,7 @@
                         <tr>
                             <th>Name</th>
                             <th>Client code</th>
-                            <th class="center">Linked contacts</th>
+                            <th class="center">No. of linked contacts</th>
                             <th></th>
                         </tr>
                     </thead>

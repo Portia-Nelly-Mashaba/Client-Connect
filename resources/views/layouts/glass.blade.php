@@ -78,6 +78,16 @@
             border-color: var(--border);
             color: var(--text);
         }
+        .btn-danger {
+            background: rgba(255, 106, 106, 0.18);
+            border-color: rgba(255, 106, 106, 0.34);
+            color: #ffd7d7;
+        }
+        .btn-xs {
+            padding: 7px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
 
         .card { padding: 20px; }
         .table-wrap { overflow-x: auto; }
@@ -133,20 +143,61 @@
         input::placeholder { color: #ced7f0; }
         .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
 
-        .tabs { display: flex; gap: 8px; margin-bottom: 18px; }
-        .tab-button {
-            border: 1px solid var(--border);
-            background: rgba(255, 255, 255, 0.08);
-            color: var(--text);
-            padding: 8px 12px;
-            border-radius: 10px;
-            cursor: pointer;
+        .tabs-shell {
+            display: inline-flex;
+            margin-bottom: 16px;
+            border-radius: 22px;
+            padding: 7px;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            background: rgba(255, 255, 255, 0.14);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24);
         }
-        .tab-button.active { background: var(--glass-strong); }
+
+        .tabs { display: inline-flex; gap: 8px; }
+        .tab-button {
+            border: 1px solid transparent;
+            background: rgba(255, 255, 255, 0.22);
+            color: var(--text);
+            padding: 10px 18px;
+            border-radius: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.18s ease;
+        }
+        .tab-button:hover {
+            background: rgba(255, 255, 255, 0.28);
+        }
+        .tab-button.active {
+            background: rgba(246, 251, 255, 0.92);
+            color: #1a2538;
+            border-color: rgba(31, 44, 66, 0.2);
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.09);
+        }
         .tab-panel { display: none; }
         .tab-panel.active { display: block; }
         .kv { display: grid; gap: 12px; }
         .kv strong { color: var(--muted); display: inline-block; width: 110px; }
+        .inline-form { display: inline; }
+        .split {
+            display: grid;
+            gap: 14px;
+        }
+        .link-row {
+            display: flex;
+            align-items: end;
+            gap: 10px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+        .link-row .field {
+            margin-bottom: 0;
+            min-width: 280px;
+            flex: 1;
+        }
     </style>
 </head>
 <body>
@@ -184,7 +235,8 @@
         });
 
         document.querySelectorAll("[data-tab-button]").forEach(function (button) {
-            button.addEventListener("click", function () {
+            button.addEventListener("click", function (event) {
+                event.preventDefault();
                 var tabGroup = button.getAttribute("data-tab-group");
                 var target = button.getAttribute("data-tab-target");
 
