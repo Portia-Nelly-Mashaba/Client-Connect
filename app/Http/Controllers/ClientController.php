@@ -7,13 +7,24 @@ use App\Models\Client;
 use App\Services\ClientCodeGeneratorService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class ClientController extends Controller
 {
+    public function index(): View
+    {
+        $clients = Client::query()
+            ->ordered()
+            ->withCount('contacts')
+            ->get();
+
+        return view('clients.index', compact('clients'));
+    }
+
     public function create(): View
     {
-        return view('clients.create');
+        return $this->index();
     }
 
     public function store(
@@ -37,8 +48,15 @@ class ClientController extends Controller
             ->with('status', 'Client created successfully.');
     }
 
-    public function show(Client $client): View
+    public function show(Request $request, Client $client): View
     {
-        return view('clients.show', compact('client'));
+        $client->load([
+            'contacts' => fn ($query) => $query->ordered(),
+        ]);
+
+        return view('clients.show', [
+            'client' => $client,
+            'openGeneralModal' => $request->boolean('edit'),
+        ]);
     }
 }
