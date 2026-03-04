@@ -1,0 +1,44 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Requests\StoreClientRequest;
+use App\Models\Client;
+use App\Services\ClientCodeGeneratorService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
+
+class ClientController extends Controller
+{
+    public function create(): View
+    {
+        return view('clients.create');
+    }
+
+    public function store(
+        StoreClientRequest $request,
+        ClientCodeGeneratorService $clientCodeGeneratorService
+    ): RedirectResponse {
+        $client = DB::transaction(function () use ($request, $clientCodeGeneratorService): Client {
+            $client = Client::query()->create([
+                'name' => $request->string('name')->toString(),
+            ]);
+
+            $client->update([
+                'client_code' => $clientCodeGeneratorService->generateForName($client->name),
+            ]);
+
+            return $client;
+        });
+
+        return redirect()
+            ->route('clients.show', $client)
+            ->with('status', 'Client created successfully.');
+    }
+
+    public function show(Client $client): View
+    {
+        return view('clients.show', compact('client'));
+    }
+}
